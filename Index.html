@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="am">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Afro Bingo Pro - V3</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-purple: #cbb4d4; --dark-purple: #4a148c; --btn-green: #27ae60;
+            --btn-orange: #f39c12; --btn-red: #c0392b; --btn-blue: #2980b9; --btn-teal: #16a085;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { background-color: var(--bg-purple); height: 100vh; display: flex; flex-direction: column; overflow: hidden; color: #333; user-select: none; }
+
+        .app-bar { background: #2c3e50; color: white; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 14px; z-index: 600; }
+        .content-area { flex: 1; overflow-y: auto; padding-bottom: 70px; position: relative; }
+        .page { display: none; padding: 10px; height: 100%; flex-direction: column; }
+        .page.active { display: flex; }
+
+        /* Stake Page */
+        .stake-container { background: white; border-radius: 20px; padding: 25px; text-align: center; margin: auto; width: 90%; max-width: 320px; border: 2px solid var(--dark-purple); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+        .stake-btn { width: 100%; border: none; border-radius: 25px; padding: 12px 20px; margin: 8px 0; font-size: 18px; font-weight: bold; color: white; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .bg-10 { background: linear-gradient(90deg, #27ae60, #2ecc71); }
+        .bg-20 { background: linear-gradient(90deg, #d35400, #e67e22); }
+        .bg-30 { background: linear-gradient(90deg, #2980b9, #3498db); }
+        .bg-50 { background: linear-gradient(90deg, #8e44ad, #9b59b6); }
+        .badge { background: rgba(255,255,255,0.3); padding: 4px 12px; border-radius: 12px; font-size: 12px; }
+
+        /* Board Selection */
+        .select-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-weight: bold; font-size: 12px; }
+        .selection-grid { background: white; border-radius: 10px; padding: 8px; display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; max-height: 240px; overflow-y: auto; border: 2px solid #bbb; }
+        .board-chip { background: var(--btn-orange); color: white; border-radius: 4px; text-align: center; padding: 6px 0; font-size: 11px; font-weight: bold; cursor: pointer; }
+        .board-chip.selected { background: var(--btn-green); }
+        .preview-area { margin-top: 10px; background: rgba(255,255,255,0.6); padding: 10px; border-radius: 10px; text-align: center; }
+
+        /* Live Game Stats */
+        .game-top-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; background: white; border-radius: 8px; padding: 4px; border: 1px solid var(--dark-purple); margin-bottom: 8px; text-align: center; }
+        .stat-item span { display: block; font-size: 8px; color: #666; font-weight: bold; text-transform: uppercase; }
+        .stat-item b { font-size: 11px; color: var(--dark-purple); display: block; margin-top: 1px; }
+      <style>
+.prev-ball-container {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 8px;
+}
+.mini-ball {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 12px;
+    color: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+.mini-ball.b { background: #ff9800; }
+.mini-ball.i { background: #2196f3; }
+.mini-ball.n { background: #4caf50; }
+.mini-ball.g { background: #e91e63; }
+.mini-ball.o { background: #9c27b0; }
+
+        /* Game Layout */
+        .game-body { display: flex; gap: 6px; flex: 1; overflow: hidden; }
+        .master-board { flex: 0.85; background: white; border-radius: 8px; padding: 3px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; overflow-y: auto; border: 1px solid var(--dark-purple); height: 100%; }
+        .m-head { color: white; font-size: 9px; text-align: center; font-weight: bold; padding: 3px 0; border-radius: 2px; }
+        .m-num { background: #f0f0f0; font-size: 8px; text-align: center; padding: 3px 0; border-radius: 2px; font-weight: bold; color: #444; }
+        .m-num.called { background: var(--btn-green); color: white; }
+
+        .right-panel { flex: 1.15; display: flex; flex-direction: column; gap: 6px; overflow: hidden; }
+        .call-card { background: linear-gradient(135deg, #7b2cbf, #4a148c); color: white; border-radius: 10px; padding: 6px 10px; display: flex; justify-content: space-between; align-items: center; }
+        .call-ball { background: var(--btn-orange); border-radius: 50%; width: 38px; height: 38px; display: flex; justify-content: center; align-items: center; font-size: 15px; font-weight: bold; }
+
+        .toggle-row { background: white; border-radius: 6px; padding: 4px 8px; display: flex; justify-content: space-between; align-items: center; font-size: 10px; font-weight: bold; }
+        .switch-btn { background: var(--btn-green); color: white; border: none; padding: 2px 8px; border-radius: 8px; cursor: pointer; font-size: 9px; }
+        .switch-btn.off { background: var(--btn-red); }
+
+        .cartelas-stack { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 2px; }
+        .cartela-card { background: white; border-radius: 8px; padding: 4px; border: 2px solid var(--dark-purple); }
+        .c-header { text-align: center; font-size: 10px; font-weight: bold; color: var(--btn-green); margin-bottom: 2px; }
+        .c-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; }
+        .c-cell { background: #fafafa; border: 1px solid #ddd; text-align: center; padding: 6px 0; font-size: 11px; font-weight: bold; border-radius: 2px; cursor: pointer; transition: 0.2s; }
+        .c-cell.marked { background: var(--btn-green); color: white; border-color: var(--btn-green); transform: scale(0.95); }
+        .c-cell.free { background: var(--btn-green); color: white; display: flex; justify-content: center; align-items: center; font-size: 10px; }
+
+        .action-row { display: flex; gap: 6px; margin-top: 6px; padding-bottom: 5px; }
+        .act-btn { flex: 1; border: none; padding: 8px; border-radius: 8px; color: white; font-weight: bold; font-size: 12px; cursor: pointer; text-align: center; }
+
+        /* Modal */
+        .modal-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-box { background: white; width: 88%; max-width: 320px; border-radius: 15px; overflow: hidden; text-align: center; border: 3px solid var(--btn-orange); }
+        .modal-top { background: var(--btn-orange); color: white; padding: 15px; font-size: 24px; font-weight: bold; }
+
+        /* Fixed Bottom Nav to prevent overlapping */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 6px 0; border-top: 1px solid #ccc; z-index: 500; height: 50px; }
+        .nav-link { text-align: center; color: #666; font-size: 9px; font-weight: bold; cursor: pointer; flex: 1; }
+        .nav-link i { display: block; font-size: 15px; margin-bottom: 1px; }
+        .nav-link.active { color: var(--dark-purple); }
+
+        /* Simple placeholder design for other tabs */
+        .page-card { background: white; border-radius: 10px; padding: 15px; margin-top: 10px; border: 1px solid var(--dark-purple); }
+    </style>
+</head>
+<body>
+
+    <div class="app-bar">
+        <span><i class="fas fa-times"></i> &nbsp; Afro Bingo</span>
+        <div><i class="fas fa-wallet"></i> <span id="app-bal">200.00</span> ETB</div>
+    </div>
+
+    <div class="content-area">
+        <!-- PAGE 1: STAKE -->
+        <div id="page-stake" class="page active">
+            <div class="stake-container">
+                <h2 style="color: var(--dark-purple); margin-bottom: 15px;">Choose Stake</h2>
+                <button class="stake-btn bg-10" onclick="selectStake(10)"><span class="badge">Play</span><span>10 ETB</span></button>
+                <button class="stake-btn bg-20" onclick="selectStake(20)"><span class="badge">Play</span><span>20 ETB</span></button>
+                <button class="stake-btn bg-30" onclick="selectStake(30)"><span class="badge">Play</span><span>30 ETB</span></button>
+                <button class="stake-btn bg-50" onclick="selectStake(50)"><span class="badge">Play</span><span>50 ETB</span></button>
+            </div>
+        </div>
+
+        <!-- PAGE 2: SELECTION -->
+        <div id="page-select" class="page">
+            <div class="select-header">
+                <button onclick="navTo('stake')" style="background:var(--btn-red); color:white; border:none; padding:4px 10px; border-radius:5px; font-weight:bold;">Leave</button>
+                <span id="select-status" style="color:var(--btn-green);">Boards: 0/3</span>
+                <button onclick="startLiveGame()" style="background:var(--dark-purple); color:white; border:none; padding:4px 12px; border-radius:5px; font-weight:bold;">Play</button>
+            </div>
+            <div class="selection-grid" id="selection-grid"></div>
+            <div class="preview-area" id="preview-area"><p style="font-size:11px; color:#666;">ካርቴላ ሲመርጡ እዚህ ይታያል</p></div>
+        </div>
+
+        <!-- PAGE 3: LIVE GAME -->
+        <div id="page-game" class="page">
+            <div class="game-top-stats">
+                <div class="stat-item"><span>Game ID</span><b id="g-id">Y79JHZD2</b></div>
+                <div class="stat-item"><span>Derash</span><b id="g-derash">0</b></div>
+                <div class="stat-item"><span>Players</span><b id="g-players">100</b></div>
+                <div class="stat-item"><span>Stake</span><b id="g-stake">10</b></div>
+                <div class="stat-item"><span>Called</span><b id="g-called">0</b></div>
+            </div>
+
+            <div class="game-body">
+                <div class="master-board" id="master-board"></div>
+                <div class="right-panel">
+                    <div class="call-card">
+                        <span style="font-size:10px;">Current Call</span>
+                        <div class="call-ball" id="call-ball-num">--</div>
+ <div id="prev-calls" style="font-size: 13px; color: #f0f0f0; margin-top: 6px; text-align: center;"></div>  
+                  </div>
+                    <div class="toggle-row">
+                        <span>Sound <button class="switch-btn" id="sound-btn" onclick="toggleSound()">ON</button></span>
+                        <span>Auto <button class="switch-btn" id="auto-btn" onclick="toggleAuto()">ON</button></span>
+                    </div>
+                    <div class="cartelas-stack" id="cartelas-stack"></div>
+                </div>
+            </div>
+
+            <div class="action-row">
+                <button class="act-btn" style="background:var(--btn-red); flex:0.4;" onclick="exitGame()">Leave</button>
+                <button class="act-btn" style="background:var(--btn-green);" onclick="manualBingoCheck()">BINGO</button>
+            </div>
+        </div>
+
+        <!-- HISTORY PAGE -->
+        <div id="page-history" class="page">
+            <h3 style="color:var(--dark-purple);">Game History</h3>
+            <div class="page-card"><p style="font-size:12px; color:#555;">ያለፉ ጨዋታዎች ታሪክ በዚህ ይመለከታሉን።</p></div>
+        </div>
+
+        <!-- WALLET PAGE -->
+        <div id="page-wallet" class="page">
+            <h3 style="color:var(--dark-purple);">Wallet</h3>
+            <div class="page-card">
+                <p style="font-size:12px; color:#555; margin-bottom: 8px;">መለያ ቀሪ ሂሳብ: <b id="wallet-bal" style="color:var(--dark-purple);">200.00</b> ETB</p>
+                <button onclick="addBalance(100)" style="background:var(--btn-green); color:white; border:none; padding:8px 15px; border-radius:5px; font-weight:bold; font-size:11px; cursor:pointer;">+ 100 ብር ጨምር</button>
+            </div>
+        </div>
+
+        <!-- PROFILE PAGE -->
+        <div id="page-profile" class="page">
+            <h3 style="color:var(--dark-purple);">Profile</h3>
+            <div class="page-card"><p style="font-size:12px; color:#555;">የተጠቃሚ መረጃዎች እዚህ ይኖራሉ።</p></div>
+        </div>
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <div class="bottom-nav">
+        <div class="nav-link active" onclick="navTo('stake')" id="nav-stake"><i class="fas fa-gamepad"></i>Game</div>
+        <div class="nav-link" onclick="navTo('history')" id="nav-history"><i class="fas fa-history"></i>History</div>
+        <div class="nav-link" onclick="navTo('wallet')" id="nav-wallet"><i class="fas fa-wallet"></i>Wallet</div>
+        <div class="nav-link" onclick="navTo('profile')" id="nav-profile"><i class="fas fa-user"></i>Profile</div>
+    </div>
+
+    <!-- BINGO WIN MODAL -->
+    <div class="modal-bg" id="bingo-modal">
+        <div class="modal-box">
+            <div class="modal-top">🎉 BINGO! 🎉</div>
+            <div style="padding: 20px;">
+                <h3 style="color:var(--dark-purple); margin-bottom:10px;">ሽልማት አሸንፈዋል!</h3>
+                <p>ካርቴላ # <b id="win-board-num" style="color:var(--btn-green); font-size:18px;">0</b></p>
+                <button style="margin-top:20px; background:var(--btn-orange); color:white; border:none; width:100%; padding:12px; border-radius:8px; font-weight:bold; font-size:16px; cursor:pointer;" onclick="closeModal()">ሽልማቱን ተቀበል</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let userBalance = 30.00;
+        let selectedStake = 10;
+        let chosenBoards = [];
+        
+        let boardMatrices = {}; 
+        let markedSpaces = {};  
+        
+        let calledNumbers = [];
+        let gameLoop = null;
+        let isAuto = true;
+        let isSoundOn = true;
+
+        window.onload = function() {
+            buildSelectionGrid();
+            updateBalanceDisplay();
+        };
+
+        function updateBalanceDisplay() {
+            document.getElementById('app-bal').innerText = userBalance.toFixed(2);
+            let wBal = document.getElementById('wallet-bal');
+            if(wBal) wBal.innerText = userBalance.toFixed(2);
+        }
+
+        function addBalance(amount) {
+            userBalance += amount;
+            updateBalanceDisplay();
+            alert(`ሂሳብዎ በ ${amount} ብር ጨምሯል!`);
+        }
+
+        function navTo(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+            document.getElementById('page-' + pageId).classList.add('active');
+            if (['stake', 'select', 'game'].includes(pageId)) document.getElementById('nav-stake').classList.add('active');
+            else document.getElementById(`nav-${pageId}`).classList.add('active');
+        }
+
+        function selectStake(stake) {
+            let totalCost = stake * 1; // ቢያንስ 1 ካርቴላ ሲመረጥ የሚቀነሰው
+            if (userBalance < stake) {
+                alert("የባላንስዎ መጠን በቂ አይደለም! እባክዎ 钱包 (Wallet) በመግባት ብር ይሙሉ አሊያም አነስተኛ ዋጋ ይምረጡ።");
+                return;
+            }
+            selectedStake = stake;
+            chosenBoards = [];
+            document.getElementById('select-status').innerText = 'Boards: 0/3';
+            document.getElementById('preview-area').innerHTML = '<p style="font-size:11px; color:#666;">ካርቴላ ሲመርጡ እዚህ ይታያል</p>';
+            document.querySelectorAll('.board-chip').forEach(c => c.classList.remove('selected'));
+            navTo('select');
+        }
+
+        function buildSelectionGrid() {
+            const container = document.getElementById('selection-grid');
+            for (let i = 1; i <= 300; i++) {
+                let div = document.createElement('div');
+                div.className = 'board-chip'; div.id = `chip-${i}`; div.innerText = i;
+                div.onclick = () => toggleBoard(i);
+                container.appendChild(div);
+            }
+        }
+
+        function toggleBoard(num) {
+            let idx = chosenBoards.indexOf(num);
+            if (idx > -1) {
+                chosenBoards.splice(idx, 1);
+                document.getElementById(`chip-${num}`).classList.remove('selected');
+            } else {
+                if (chosenBoards.length >= 3) { alert("እስከ 3 ካርቴላዎች ብቻ መምረጥ ይችላሉ!"); return; }
+                chosenBoards.push(num);
+                document.getElementById(`chip-${num}`).classList.add('selected');
+                renderPreview(num);
+            }
+            document.getElementById('select-status').innerText = `Boards: ${chosenBoards.length}/3`;
+        }
+
+        function generateValidBingoCard(bNum) {
+            const getCol = (min, max) => {
+                let col = [];
+                while(col.length < 5) {
+                    let r = Math.floor(Math.random() * (max - min + 1)) + min;
+                    if(col.indexOf(r) === -1) col.push(r);
+                }
+                return col;
+            };
+            
+            let matrix = [
+                getCol(1, 15), getCol(16, 30), getCol(31, 45), getCol(46, 60), getCol(61, 75)
+            ];
+            matrix[2][2] = '*';
+
+            let rowMatrix = [];
+            for(let r=0; r<5; r++) {
+                rowMatrix.push([matrix[0][r], matrix[1][r], matrix[2][r], matrix[3][r], matrix[4][r]]);
+            }
+
+            boardMatrices[bNum] = rowMatrix;
+            markedSpaces[bNum] = [
+                [false, false, false, false, false],
+                [false, false, false, false, false],
+                [false, false, true, false, false],
+                [false, false, false, false, false],
+                [false, false, false, false, false]
+            ];
+        }
+
+        function renderPreview(bNum) {
+            if (!boardMatrices[bNum]) generateValidBingoCard(bNum);
+            
+            let html = `<div style="color:var(--btn-green); font-weight:bold; font-size:11px;">Cartela #${bNum}</div><div class="c-grid" style="margin-top:4px;">`;
+            html += `<div style="background:#f39c12; color:white; font-size:9px; padding:2px 0;">B</div><div style="background:#27ae60; color:white; font-size:9px; padding:2px 0;">I</div><div style="background:#2980b9; color:white; font-size:9px; padding:2px 0;">N</div><div style="background:#c0392b; color:white; font-size:9px; padding:2px 0;">G</div><div style="background:#8e44ad; color:white; font-size:9px; padding:2px 0;">O</div>`;
+            
+            for(let r=0; r<5; r++){
+                for(let c=0; c<5; c++){
+                    let val = boardMatrices[bNum][r][c];
+                    if (val === '*') html += `<div class="c-cell free"><i class="fas fa-star"></i></div>`;
+                    else html += `<div class="c-cell">${val}</div>`;
+                }
+            }
+            html += `</div>`;
+            document.getElementById('preview-area').innerHTML = html;
+        }
+
+        function startLiveGame() {
+            if (chosenBoards.length === 0) { alert("እባክዎ ቢያንስ 1 ካርቴላ ይምረጡ!"); return; }
+            
+            let totalCost = selectedStake * chosenBoards.length;
+            if (userBalance < totalCost) {
+                alert(`የመረጧቸው ካርቴላዎች ዋጋ አጠቃላይ ${totalCost} ብር ነው። ባላንስዎ በቂ አይደለም!`);
+                return;
+            }
+
+            // Stake ሲቀነስ
+            userBalance -= totalCost;
+            updateBalanceDisplay();
+
+            let totalPlayers = chosenBoards.length; // የመረጧቸውን ካርቴላዎች ብዛት ብቻ ይወስዳል
+let totalPool = totalPlayers * selectedStake;
+let derash = totalPool; // የተጫዋች ብዛት ትንሽ ስለሚሆን ደራሹን ሙሉውን እንዲሰጥ ማድረግ ይችላሉ
+
+document.getElementById('g-derash').innerText = derash;
+document.getElementById('g-players').innerText = totalPlayers;
+document.getElementById('g-stake').innerText = selectedStake;
+
+
+            initMasterBoard();
+            renderStackedCartelas();
+            navTo('game');
+            runGameLoop();
+        }
+
+        function initMasterBoard() {
+            const mb = document.getElementById('master-board');
+            mb.innerHTML = `<div class="m-head" style="background:#f39c12;">B</div><div class="m-head" style="background:#27ae60;">I</div><div class="m-head" style="background:#2980b9;">N</div><div class="m-head" style="background:#c0392b;">G</div><div class="m-head" style="background:#8e44ad;">O</div>`;
+            for (let i = 1; i <= 75; i++) {
+                mb.innerHTML += `<div class="m-num" id="mb-${i}">${i}</div>`;
+            }
+        }
+
+        function renderStackedCartelas() {
+            const stack = document.getElementById('cartelas-stack');
+            stack.innerHTML = '';
+            chosenBoards.forEach(bNum => {
+                let card = document.createElement('div');
+                card.className = 'cartela-card';
+                let html = `<div class="c-header">Cartela #${bNum}</div><div class="c-grid">`;
+                html += `<div style="background:#f39c12; color:white; font-size:8px; text-align:center;">B</div><div style="background:#27ae60; color:white; font-size:8px; text-align:center;">I</div><div style="background:#2980b9; color:white; font-size:8px; text-align:center;">N</div><div style="background:#c0392b; color:white; font-size:8px; text-align:center;">G</div><div style="background:#8e44ad; color:white; font-size:8px; text-align:center;">O</div>`;
+                
+                for(let r=0; r<5; r++){
+                    for(let c=0; c<5; c++){
+                        let val = boardMatrices[bNum][r][c];
+                        if (val === '*') html += `<div class="c-cell free"><i class="fas fa-star"></i></div>`;
+                        else html += `<div class="c-cell" id="c-${bNum}-v-${val}" onclick="manualMark(${bNum}, ${r}, ${c}, ${val})">${val}</div>`;
+                    }
+                }
+                html += `</div>`;
+                card.innerHTML = html;
+                stack.appendChild(card);
+            });
+        }
+
+        // FIXED AMHARIC SPEECH (በግልፅ በአማርኛ ፊደል ፊደል እንዲጠራ የተስተካከለ)
+                // የተስተካከለው የድምፅ አጠራር (ስህተት ቢፈጠር ጌሙ እንዳይቆም)
+        function playAmharicVoice(letter, num) {
+            if (!isSoundOn) return;
+            try {
+                const amhLetters = { 'B': 'ቢ', 'I': 'አይ', 'N': 'ኤን', 'G': 'ጂ', 'O': 'ኦ' };
+                let textToSpeak = `${amhLetters[letter]} ${num}`;
+
+    speech.lang = 'am-ET';          
+                let speech = new SpeechSynthesisUtterance(textToSpeak);
+                // አንዳንድ ስልኮች ላይ 'am-ET' ስለማይሰራ ወደ እንግሊዝኛ እንዳይቀይረው እናስወግደዋለን ወይም በዝምታ ያልፈዋል
+                speech.rate = 0.85;
+                window.speechSynthesis.speak(speech);
+            } catch (error) {
+                console.log("Voice error ignored.");
+            }
+        }
+
+                function runGameLoop() {
+            calledNumbers = [];
+            clearInterval(gameLoop);
+            let count = 0;
+
+            gameLoop = setInterval(() => {
+                if (calledNumbers.length >= 75) { clearInterval(gameLoop); return; }
+
+                let nextNum;
+                do { nextNum = Math.floor(Math.random() * 75) + 1; } while (calledNumbers.includes(nextNum));
+                calledNumbers.push(nextNum);
+                count++;
+
+                document.getElementById('g-called').innerText = count;
+                let letter = nextNum <= 15 ? 'B' : nextNum <= 30 ? 'I' : nextNum <= 45 ? 'N' : nextNum <= 60 ? 'G' : 'O';
+                document.getElementById('call-ball-num').innerText = `${letter}-${nextNum}`;
+         // ያለፉትን 3 ቁጥሮች ለማሳየት የተጨመረ ኮድ
+let prevText = "";
+if (calledNumbers.length > 1) {
+    // ከመጨረሻው (አሁን ከተጠራው) ቁጥር በፊት ያሉትን እስከ 3 ቁጥሮች እንወስዳለን
+    let start = Math.max(0, calledNumbers.length - 4);
+    let prevNums = calledNumbers.slice(start, calledNumbers.length - 1);
+
+    // ቁጥሮቹን ወደ ፊደል (B, I, N, G, O) እየቀየርን እናዘጋጃለን
+    let formattedPrev = prevNums.map(n => {
+        let l = n <= 15 ? 'B' : n <= 30 ? 'I' : n <= 45 ? 'N' : n <= 60 ? 'G' : 'O';
+        return `${l}-${n}`;
+    }).reverse().join(', '); // በቅርብ የተጠራው ቀድሞ እንዲታይ
+
+    prevText = ": " + formattedPrev;
+}
+let prevCallsDiv = document.getElementById('prev-calls');
+if(prevCallsDiv) {
+    prevCallsDiv.innerText = prevText;
+}
+       
+                // 1. መጀመሪያ ቀለሙን እናረንጓዴ እናደርጋለን (ይህ ቀድሞ መምጣት አለበት!)
+                let mbCell = document.getElementById(`mb-${nextNum}`);
+                if (mbCell) mbCell.classList.add('called');
+
+                chosenBoards.forEach(bNum => {
+                    let cell = document.getElementById(`c-${bNum}-v-${nextNum}`);
+
+
+                    if (cell && isAuto) {
+                        cell.classList.add('marked');
+                        for(let r=0; r<5; r++){
+                            for(let c=0; c<5; c++){
+                                if(boardMatrices[bNum][r][c] === nextNum) markedSpaces[bNum][r][c] = true;
+                            }
+                        }
+                    }
+                    if(isAuto && checkForBingo(bNum)) triggerBingoWin(bNum);
+                });
+
+                // 2. ከዛ በኋላ ድምፁን እንጠራለን
+                playAmharicVoice(letter, nextNum);
+
+            }, 3500);
+        }
+
+        function toggleAuto() {
+            isAuto = !isAuto;
+            let btn = document.getElementById('auto-btn');
+            btn.className = isAuto ? "switch-btn" : "switch-btn off"; btn.innerText = isAuto ? "ON" : "OFF";
+        }
+        function toggleSound() {
+            isSoundOn = !isSoundOn;
+            let btn = document.getElementById('sound-btn');
+            btn.className = isSoundOn ? "switch-btn" : "switch-btn off"; btn.innerText = isSoundOn ? "ON" : "OFF";
+        }
+
+        function manualMark(bNum, r, c, val) {
+            if (!isAuto && calledNumbers.includes(val)) {
+                let cell = document.getElementById(`c-${bNum}-v-${val}`);
+                if (cell && !cell.classList.contains('marked')) {
+                    cell.classList.add('marked');
+                    markedSpaces[bNum][r][c] = true;
+                }
+            }
+        }
+
+        function checkForBingo(bNum) {
+            let m = markedSpaces[bNum];
+            for(let r=0; r<5; r++) if(m[r][0] && m[r][1] && m[r][2] && m[r][3] && m[r][4]) return true;
+            for(let c=0; c<5; c++) if(m[0][c] && m[1][c] && m[2][c] && m[3][c] && m[4][c]) return true;
+            if(m[0][0] && m[1][1] && m[2][2] && m[3][3] && m[4][4]) return true;
+            if(m[0][4] && m[1][3] && m[2][2] && m[3][1] && m[4][0]) return true;
+            return false;
+        }
+
+        function manualBingoCheck() {
+            let found = false;
+            chosenBoards.forEach(bNum => {
+                if(checkForBingo(bNum)) { found = true; triggerBingoWin(bNum); }
+            });
+            if(!found) alert("ገና ቢንጎ አላሉም! (No Bingo yet)");
+        }
+
+        function triggerBingoWin(bNum) {
+            clearInterval(gameLoop);
+            let derashAmount = parseFloat(document.getElementById('g-derash').innerText) || 100;
+            userBalance += derashAmount; // አሸናፊ ሲሆን የድራሽ ገንዘብ ይጨመራል
+            updateBalanceDisplay();
+
+            document.getElementById('win-board-num').innerText = bNum;
+            document.getElementById('bingo-modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('bingo-modal').style.display = 'none';
+            exitGame();
+        }
+
+        function exitGame() {
+            clearInterval(gameLoop);
+            navTo('stake');
+        }
+    </script>
+</body>
+</html>
+
