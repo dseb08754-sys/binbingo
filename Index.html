@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Afro Bingo Pro - V3</title>
+    <title>Bingo Bingo Pro - V3</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -41,30 +41,39 @@
         .game-top-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; background: white; border-radius: 8px; padding: 4px; border: 1px solid var(--dark-purple); margin-bottom: 8px; text-align: center; }
         .stat-item span { display: block; font-size: 8px; color: #666; font-weight: bold; text-transform: uppercase; }
         .stat-item b { font-size: 11px; color: var(--dark-purple); display: block; margin-top: 1px; }
-      <style>
-.prev-ball-container {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    margin-top: 8px;
-}
-.mini-ball {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-size: 12px;
-    color: white;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-}
-.mini-ball.b { background: #ff9800; }
-.mini-ball.i { background: #2196f3; }
-.mini-ball.n { background: #4caf50; }
-.mini-ball.g { background: #e91e63; }
-.mini-ball.o { background: #9c27b0; }
+
+        /* ኳሶቹን የያዘው ሳጥን ዲዛይን */
+        #prev-ball-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            margin-top: 5px;
+            padding: 4px 8px;
+            background-color: rgba(255, 255, 255, 0.4);
+            border: 1px solid #b3b3cc;
+            border-radius: 8px;
+            min-height: 35px;
+        }
+
+        .mini-ball {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 11px;
+            color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .mini-ball.b { background-color: #ff9800; }
+        .mini-ball.i { background-color: #388e3c; }
+        .mini-ball.n { background-color: #0000ff; }
+        .mini-ball.g { background-color: #e91e63; }
+        .mini-ball.o { background-color: #9c27b0; }
 
         /* Game Layout */
         .game-body { display: flex; gap: 6px; flex: 1; overflow: hidden; }
@@ -97,20 +106,19 @@
         .modal-box { background: white; width: 88%; max-width: 320px; border-radius: 15px; overflow: hidden; text-align: center; border: 3px solid var(--btn-orange); }
         .modal-top { background: var(--btn-orange); color: white; padding: 15px; font-size: 24px; font-weight: bold; }
 
-        /* Fixed Bottom Nav to prevent overlapping */
+        /* Fixed Bottom Nav */
         .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 6px 0; border-top: 1px solid #ccc; z-index: 500; height: 50px; }
         .nav-link { text-align: center; color: #666; font-size: 9px; font-weight: bold; cursor: pointer; flex: 1; }
         .nav-link i { display: block; font-size: 15px; margin-bottom: 1px; }
         .nav-link.active { color: var(--dark-purple); }
 
-        /* Simple placeholder design for other tabs */
         .page-card { background: white; border-radius: 10px; padding: 15px; margin-top: 10px; border: 1px solid var(--dark-purple); }
     </style>
 </head>
 <body>
 
     <div class="app-bar">
-        <span><i class="fas fa-times"></i> &nbsp; Afro Bingo</span>
+        <span><i class="fas fa-times"></i> &nbsp; Bingo Bingo</span>
         <div><i class="fas fa-wallet"></i> <span id="app-bal">200.00</span> ETB</div>
     </div>
 
@@ -152,9 +160,11 @@
                 <div class="right-panel">
                     <div class="call-card">
                         <span style="font-size:10px;">Current Call</span>
-                        <div class="call-ball" id="call-ball-num">--</div>
- <div id="prev-calls" style="font-size: 13px; color: #f0f0f0; margin-top: 6px; text-align: center;"></div>  
-                  </div>
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <div class="call-ball" id="call-ball-num">--</div>
+                            <div id="prev-ball-container"></div>
+                        </div>
+                    </div>
                     <div class="toggle-row">
                         <span>Sound <button class="switch-btn" id="sound-btn" onclick="toggleSound()">ON</button></span>
                         <span>Auto <button class="switch-btn" id="auto-btn" onclick="toggleAuto()">ON</button></span>
@@ -172,7 +182,7 @@
         <!-- HISTORY PAGE -->
         <div id="page-history" class="page">
             <h3 style="color:var(--dark-purple);">Game History</h3>
-            <div class="page-card"><p style="font-size:12px; color:#555;">ያለፉ ጨዋታዎች ታሪክ በዚህ ይመለከታሉን።</p></div>
+            <div class="page-card"><p style="font-size:12px; color:#555;">ያለፉ ጨዋታዎች ታሪክ በዚህ ይመለከታሉ።</p></div>
         </div>
 
         <!-- WALLET PAGE -->
@@ -212,7 +222,7 @@
     </div>
 
     <script>
-        let userBalance = 30.00;
+        let userBalance = 200.00;
         let selectedStake = 10;
         let chosenBoards = [];
         
@@ -250,9 +260,8 @@
         }
 
         function selectStake(stake) {
-            let totalCost = stake * 1; // ቢያንስ 1 ካርቴላ ሲመረጥ የሚቀነሰው
             if (userBalance < stake) {
-                alert("የባላንስዎ መጠን በቂ አይደለም! እባክዎ 钱包 (Wallet) በመግባት ብር ይሙሉ አሊያም አነስተኛ ዋጋ ይምረጡ።");
+                alert("የባላንስዎ መጠን በቂ አይደለም! እባክዎ Wallet በመግባት ብር ይሙሉ አሊያም አነስተኛ ዋጋ ይምረጡ።");
                 return;
             }
             selectedStake = stake;
@@ -265,9 +274,12 @@
 
         function buildSelectionGrid() {
             const container = document.getElementById('selection-grid');
+            container.innerHTML = '';
             for (let i = 1; i <= 300; i++) {
                 let div = document.createElement('div');
-                div.className = 'board-chip'; div.id = `chip-${i}`; div.innerText = i;
+                div.className = 'board-chip'; 
+                div.id = `chip-${i}`; 
+                div.innerText = i;
                 div.onclick = () => toggleBoard(i);
                 container.appendChild(div);
             }
@@ -343,18 +355,16 @@
                 return;
             }
 
-            // Stake ሲቀነስ
             userBalance -= totalCost;
             updateBalanceDisplay();
 
-            let totalPlayers = chosenBoards.length; // የመረጧቸውን ካርቴላዎች ብዛት ብቻ ይወስዳል
-let totalPool = totalPlayers * selectedStake;
-let derash = totalPool; // የተጫዋች ብዛት ትንሽ ስለሚሆን ደራሹን ሙሉውን እንዲሰጥ ማድረግ ይችላሉ
+            let totalPlayers = 100; 
+            let totalPool = totalPlayers * selectedStake;
+            let derash = totalPool * 0.90; 
 
-document.getElementById('g-derash').innerText = derash;
-document.getElementById('g-players').innerText = totalPlayers;
-document.getElementById('g-stake').innerText = selectedStake;
-
+            document.getElementById('g-derash').innerText = derash.toFixed(0);
+            document.getElementById('g-players').innerText = totalPlayers;
+            document.getElementById('g-stake').innerText = selectedStake;
 
             initMasterBoard();
             renderStackedCartelas();
@@ -364,9 +374,19 @@ document.getElementById('g-stake').innerText = selectedStake;
 
         function initMasterBoard() {
             const mb = document.getElementById('master-board');
-            mb.innerHTML = `<div class="m-head" style="background:#f39c12;">B</div><div class="m-head" style="background:#27ae60;">I</div><div class="m-head" style="background:#2980b9;">N</div><div class="m-head" style="background:#c0392b;">G</div><div class="m-head" style="background:#8e44ad;">O</div>`;
-            for (let i = 1; i <= 75; i++) {
-                mb.innerHTML += `<div class="m-num" id="mb-${i}">${i}</div>`;
+            mb.innerHTML = `
+                <div class="m-head" style="background:#f39c12;">B</div>
+                <div class="m-head" style="background:#27ae60;">I</div>
+                <div class="m-head" style="background:#2980b9;">N</div>
+                <div class="m-head" style="background:#c0392b;">G</div>
+                <div class="m-head" style="background:#8e44ad;">O</div>
+            `;
+
+            for (let row = 1; row <= 15; row++) {
+                for (let col = 0; col < 5; col++) {
+                    let number = row + (col * 15);
+                    mb.innerHTML += `<div class="m-num" id="mb-${number}">${number}</div>`;
+                }
             }
         }
 
@@ -392,17 +412,14 @@ document.getElementById('g-stake').innerText = selectedStake;
             });
         }
 
-        // FIXED AMHARIC SPEECH (በግልፅ በአማርኛ ፊደል ፊደል እንዲጠራ የተስተካከለ)
-                // የተስተካከለው የድምፅ አጠራር (ስህተት ቢፈጠር ጌሙ እንዳይቆም)
         function playAmharicVoice(letter, num) {
             if (!isSoundOn) return;
             try {
                 const amhLetters = { 'B': 'ቢ', 'I': 'አይ', 'N': 'ኤን', 'G': 'ጂ', 'O': 'ኦ' };
                 let textToSpeak = `${amhLetters[letter]} ${num}`;
 
-    speech.lang = 'am-ET';          
                 let speech = new SpeechSynthesisUtterance(textToSpeak);
-                // አንዳንድ ስልኮች ላይ 'am-ET' ስለማይሰራ ወደ እንግሊዝኛ እንዳይቀይረው እናስወግደዋለን ወይም በዝምታ ያልፈዋል
+                speech.lang = 'am-ET';
                 speech.rate = 0.85;
                 window.speechSynthesis.speak(speech);
             } catch (error) {
@@ -410,7 +427,7 @@ document.getElementById('g-stake').innerText = selectedStake;
             }
         }
 
-                function runGameLoop() {
+        function runGameLoop() {
             calledNumbers = [];
             clearInterval(gameLoop);
             let count = 0;
@@ -426,33 +443,32 @@ document.getElementById('g-stake').innerText = selectedStake;
                 document.getElementById('g-called').innerText = count;
                 let letter = nextNum <= 15 ? 'B' : nextNum <= 30 ? 'I' : nextNum <= 45 ? 'N' : nextNum <= 60 ? 'G' : 'O';
                 document.getElementById('call-ball-num').innerText = `${letter}-${nextNum}`;
-         // ያለፉትን 3 ቁጥሮች ለማሳየት የተጨመረ ኮድ
-let prevText = "";
-if (calledNumbers.length > 1) {
-    // ከመጨረሻው (አሁን ከተጠራው) ቁጥር በፊት ያሉትን እስከ 3 ቁጥሮች እንወስዳለን
-    let start = Math.max(0, calledNumbers.length - 4);
-    let prevNums = calledNumbers.slice(start, calledNumbers.length - 1);
-
-    // ቁጥሮቹን ወደ ፊደል (B, I, N, G, O) እየቀየርን እናዘጋጃለን
-    let formattedPrev = prevNums.map(n => {
-        let l = n <= 15 ? 'B' : n <= 30 ? 'I' : n <= 45 ? 'N' : n <= 60 ? 'G' : 'O';
-        return `${l}-${n}`;
-    }).reverse().join(', '); // በቅርብ የተጠራው ቀድሞ እንዲታይ
-
-    prevText = ": " + formattedPrev;
-}
-let prevCallsDiv = document.getElementById('prev-calls');
-if(prevCallsDiv) {
-    prevCallsDiv.innerText = prevText;
-}
+   
+                let prevContainer = document.getElementById('prev-ball-container');
+                if (prevContainer) {
+                    prevContainer.innerHTML = ''; 
+                    
+                    if (calledNumbers.length > 1) {
+                        let start = Math.max(0, calledNumbers.length - 4);
+                        let prevNums = calledNumbers.slice(start, calledNumbers.length - 1);
+                        
+                        prevNums.forEach(num => {
+                            let pLetter = num <= 15 ? 'B' : num <= 30 ? 'I' : num <= 45 ? 'N' : num <= 60 ? 'G' : 'O';
+                            
+                            let ball = document.createElement('div');
+                            ball.className = `mini-ball ${pLetter.toLowerCase()}`;
+                            ball.textContent = `${pLetter}${num}`;
+                            
+                            prevContainer.appendChild(ball);
+                        });
+                    }
+                }
        
-                // 1. መጀመሪያ ቀለሙን እናረንጓዴ እናደርጋለን (ይህ ቀድሞ መምጣት አለበት!)
                 let mbCell = document.getElementById(`mb-${nextNum}`);
                 if (mbCell) mbCell.classList.add('called');
 
                 chosenBoards.forEach(bNum => {
                     let cell = document.getElementById(`c-${bNum}-v-${nextNum}`);
-
 
                     if (cell && isAuto) {
                         cell.classList.add('marked');
@@ -465,7 +481,6 @@ if(prevCallsDiv) {
                     if(isAuto && checkForBingo(bNum)) triggerBingoWin(bNum);
                 });
 
-                // 2. ከዛ በኋላ ድምፁን እንጠራለን
                 playAmharicVoice(letter, nextNum);
 
             }, 3500);
@@ -474,12 +489,15 @@ if(prevCallsDiv) {
         function toggleAuto() {
             isAuto = !isAuto;
             let btn = document.getElementById('auto-btn');
-            btn.className = isAuto ? "switch-btn" : "switch-btn off"; btn.innerText = isAuto ? "ON" : "OFF";
+            btn.className = isAuto ? "switch-btn" : "switch-btn off"; 
+            btn.innerText = isAuto ? "ON" : "OFF";
         }
+
         function toggleSound() {
             isSoundOn = !isSoundOn;
             let btn = document.getElementById('sound-btn');
-            btn.className = isSoundOn ? "switch-btn" : "switch-btn off"; btn.innerText = isSoundOn ? "ON" : "OFF";
+            btn.className = isSoundOn ? "switch-btn" : "switch-btn off"; 
+            btn.innerText = isSoundOn ? "ON" : "OFF";
         }
 
         function manualMark(bNum, r, c, val) {
@@ -501,6 +519,20 @@ if(prevCallsDiv) {
             return false;
         }
 
+        function calculateDerash() {
+            let totalCards = chosenBoards.length; 
+            let stakePrice = selectedStake || 10;   
+            let totalPool = totalCards * stakePrice * 100; // ተጫዋቾችን መሰረት በማድረግ
+            let derashAmount = totalPool * 0.90;    
+
+            let derashElement = document.getElementById('g-derash');
+            if (derashElement) {
+                derashElement.innerText = derashAmount.toFixed(0);
+            }
+            
+            return derashAmount;
+        }
+  
         function manualBingoCheck() {
             let found = false;
             chosenBoards.forEach(bNum => {
@@ -511,8 +543,9 @@ if(prevCallsDiv) {
 
         function triggerBingoWin(bNum) {
             clearInterval(gameLoop);
-            let derashAmount = parseFloat(document.getElementById('g-derash').innerText) || 100;
-            userBalance += derashAmount; // አሸናፊ ሲሆን የድራሽ ገንዘብ ይጨመራል
+            
+            let derashAmount = calculateDerash();
+            userBalance += derashAmount; 
             updateBalanceDisplay();
 
             document.getElementById('win-board-num').innerText = bNum;
@@ -528,6 +561,46 @@ if(prevCallsDiv) {
             clearInterval(gameLoop);
             navTo('stake');
         }
+             // የቴሌግራም ዌብ አፕ ዳታን በመቀበል ተጠቃሚውን መለየት
+        let telegramUser = null; 
+
+        function initTelegramUser() {
+            if (window.Telegram && window.Telegram.WebApp) {
+                const tg = window.Telegram.WebApp;
+                tg.ready();
+                
+                // የተጠቃሚውን መረጃ ከቴሌግራም ማግኘት
+                if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                    telegramUser = tg.initDataUnsafe.user;
+                    console.log("Logged in Telegram User:", telegramUser);
+                    
+                    // ለምሳሌ የዩዘር ስም ማሳየት ከተፈለገ
+                    // document.getElementById('username-display').innerText = telegramUser.first_name;
+                }
+            }
+        } 
+
+        // ገጹ ሲከፈት የቴሌግራም መረጃን ማጣራት
+        window.onload = function() {
+            initTelegramUser();
+            buildSelectionGrid();
+            updateBalanceDisplay();
+        }; 
+
+        // አድሚኑ ተጠቃሚው ብር ሲያስገባ በዩዘር መለያ (Telegram ID) ገንዘብ የሚጨምርበት פונክሽን
+        function adminAddBalanceToUser(targetUserId, amount, phoneNumber) {
+            // በdatabase ውስጥ ተጠቃሚውን ፍለጋ ብሩን መጨመር
+            console.log(`User ID: ${targetUserId} - Phone: ${phoneNumber} - Added: ${amount} ETB`);
+            
+            // ለተጠቃሚው በቦቱ በኩል ማሳወቂያ መላክ
+            // sendTelegramNotification(targetUserId, `የክፍያ ጥያቄዎ ጸድቆ ${amount} ብር አካውንትዎ ገብቷል!`);
+        } 
+
+        // አድሚኑ ወጪ ሲያደርግ ከቀሪ ሂሳብ ላይ የሚቀንሰው
+        function adminDeductBalanceForWithdraw(targetUserId, amount) {
+            console.log(`User ID: ${targetUserId} - Withdrawn: ${amount} ETB`);
+            // ከዳታቤዝ ላይ ተቀናሽ ማድረግ
+        }
     </script>
 </body>
 </html>
