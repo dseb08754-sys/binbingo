@@ -561,51 +561,74 @@
             clearInterval(gameLoop);
             navTo('stake');
         }
-// የተጠቃሚ መረጃ ከቴሌግራም እና ከሱፓቤዝ ማምጣት
+// Supabase ትክክለኛ ግንኙነት እና የውሂብ ማስተካከያ
+const SUPABASE_URL = 'https://lwqqzkjxcswxebkultyl.supabase.co/rest/v1/';
+const SUPABASE_KEY = 'sb_secret_TUbe2ZuwxM0zmJbrdEbcbw_3ldulZ4g';
+
+// Supabase 클라이언트 (Client) መፍጠር
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 let currentUserBalance = 0;
 let currentTelegramId = null;
 
 async function initTelegramUser() {
-    if (window.Telegram && window.Telegram.WebApp) {
-        const tg = window.Telegram.WebApp;
-        tg.ready();
+    try {
+        if (window.Telegram && window.Telegram.WebApp) {
+            const tg = window.Telegram.WebApp;
+            tg.ready();
 
-        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            const telegramUser = tg.initDataUnsafe.user;
-            currentTelegramId = telegramUser.id;
-            console.log("Logged in Telegram User:", currentTelegramId);
-
-            // ከሱፓቤዝ የዚህን ተጠቃሚ መረጃ መፈለግ
-            try {
-                let { data, error } = await supabaseClient
-                    .from('users')
-                    .select('*')
-                    .eq('telegram_id', currentTelegramId)
-                    .single();
-
-                if (data) {
-                    currentUserBalance = data.balance;
-                } else {
-                    // አዲስ ተጠቃሚ ከሆነ 10 ብር ቦነስ ጨምሮ መመዝገብ
-                    await supabaseClient.from('users').upsert({ 
-                        telegram_id: currentTelegramId, 
-                        balance: 10 
-                    });
-                    currentUserBalance = 10;
-                }
-                updateBalanceDisplay();
-            } catch (e) {
-                console.log("Supabase connection error:", e);
+            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                currentTelegramId = tg.initDataUnsafe.user.id;
             }
         }
+
+        // ለፈተና ያህል ቴሌግራም ባይኖርም በዲፎልት ቴሌግራም ID እንዲሰራ (Testing fallback)
+        if (!currentTelegramId) {
+            currentTelegramId = 123456789; 
+        }
+
+        console.log("Checking user in Supabase, ID:", currentTelegramId);
+
+        // ከሱፓቤዝ ዳታቤዝ መረጃውን መፈለግ
+        let { data, error } = await db
+            .from('users')
+            .select('*')
+            .eq('telegram_id', currentTelegramId)
+            .maybeSingle();
+
+        if (data) {
+            currentUserBalance = data.balance || 0;
+        } else {
+            // ተጠቃሚው ከሌለ በአዲስ መልክ መመዝገብ እና 10 ብር ቦነስ መስጠት
+            const { error: insertError } = await db
+                .from('users')
+                .insert([{ telegram_id: currentTelegramId, balance: 10 }]);
+            
+            if (!insertError) {
+                currentUserBalance = 10;
+            }
+        }
+
+        // በገጹ ላይ ያሉትን የባላንስ መጠኖች ማሻሻል
+        updateBalanceDisplay();
+        
+    } catch (err) {
+        console.error("Database connection error:", err);
     }
 }
 
-// ዌብ አፑ ሲከፈት የሚከናወኑ
+// የባላንስ ማሳያዎችን በሰነዱ ላይ የሚያዘምነው ፋንክሽን
+function updateBalanceDisplay() {
+    const balanceElements = document.querySelectorAll('#user-balance, #wallet-balance, .balance-display');
+    balanceElements.forEach(el => {
+        if (el) el.innerText = `${currentUserBalance} ETB`;
+    });
+}
+
+// ዌብ አፑ ሲከፈት የሚጀምረው
 window.onload = async function() {
     await initTelegramUser();
-    buildSelectionGrid();
-    updateBalanceDisplay();
+    if (typeof buildSelectionGrid === 'function') buildSelectionGrid();
 };
 
     </script>
