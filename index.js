@@ -27,7 +27,8 @@ bot.start(async (ctx) => {
         ctx.reply(`ሰላም ${firstName}! ወደ Bingo bingo በደህና መጡ! ጨዋታውን ለመጀመር ከታች ያለውን ቁልፍ ይጫኑ።`, {
             reply_markup: {
                 inline_keyboard: [
-                    [{ text: "🎮 ጨዋታውን ጀምር", web_app: { url: "https://node-bot--danseb773.replit.app" } }]
+                    { text: '🎮 ጨዋታን መጀመር', web_app: { url: 'https://binbingo-8epo.onrender.com' } }
+
                 ]
             }
         });
