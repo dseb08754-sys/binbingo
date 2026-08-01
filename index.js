@@ -1,18 +1,30 @@
 const { Telegraf, Markup } = require('telegraf');
 const { createClient } = require('@supabase/supabase-js');
+const express = require('express');
+const path = require('path');
 
 // 1. ትክክለኛ መረጃዎች እና ኪዮች
 const BOT_TOKEN = '8913189775:AAEwStmQ6Fv9uvPxMx3NrGYUuVoIybSNhDs';
 const SUPABASE_URL = 'https://lwqqzkjxcswxebkultyl.supabase.co/rest/v1/';
 const SUPABASE_KEY = 'sb_secret_TUbe2ZuwxM0zmJbrdEbcbw_3ldulZ4g';
-const REQUIRED_CHANNEL = '@Bingobingoethiobot'; // ተጠቃሚዎች እንዲቀላቀሉ የሚጠበቅበት ቻናል
+const REQUIRED_CHANNEL = '@Bingobingoethiobot';
 
 const bot = new Telegraf(BOT_TOKEN);
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const WEB_APP_URL = 'https://binbingo-8epo.onrender.com';
 
-// 2. ፕሮፌሽናል ዋና ዋና የኪቦርድ አዝራሮች (እንደ ምስሉ)
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// የስታቲክ ፋይሎች (HTML, CSS, JS) ማስተናገጃ
+app.use(express.static(path.join(__dirname)));
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// 2. ፕሮፌሽናል ዋና ዋና የኪቦርድ አዝራሮች
 const mainKeyboard = Markup.keyboard([
   ['🎮 Play'],
   ['💰 Deposit', '🦋 Withdraw'],
@@ -21,17 +33,17 @@ const mainKeyboard = Markup.keyboard([
   ['🎁 Invite']
 ]).resize();
 
-// 3. ቻናል የመቀላቀል ሁኔታን ማረጋገጫ ፋንክሽን
+// 3. ቻናል የመቀላቀል ሁኔታን ማረጋገጫ
 async function checkSubscription(userId) {
   try {
     const chatMember = await bot.telegram.getChatMember(REQUIRED_CHANNEL, userId);
     return ['creator', 'administrator', 'member'].includes(chatMember.status);
   } catch (e) {
-    return true; // ቻናሉ ክፍት ከሆነ ወይም ኤሮር ካመጣ እንዳይዘጋ
+    return true;
   }
 }
 
-// 4. /start ትዕዛዝ (ቻናል ማረጋገጫ እና ምዝገባ)
+// 4. /start ትዕዛዝ
 bot.start(async (ctx) => {
   const userId = ctx.from.id;
   const firstName = ctx.from.first_name;
@@ -51,7 +63,6 @@ bot.start(async (ctx) => {
     );
   }
 
-  // ዴታቤዝ ቼክ እና ምዝገባ
   try {
     const { data } = await supabase.from('users').select('*').eq('telegram_id', userId).single();
     if (!data) {
@@ -67,7 +78,6 @@ bot.start(async (ctx) => {
   );
 });
 
-// ቻናሉን መቀላቀሉን ሲጫን የሚመለስ
 bot.action('check_join', async (ctx) => {
   const userId = ctx.from.id;
   const isJoined = await checkSubscription(userId);
@@ -129,20 +139,10 @@ bot.hears('🎁 Invite', (ctx) => {
   ctx.reply(`🎁 ጓደኛዎችዎን በመጋበዝ ሽልማት ያግኙ!\n\nየእርስዎ መጋበዣ ሊንክ:\n${inviteLink}`);
 });
 
-// 6. ሰርቨር ማስጀመር
+// 6. ሰርቨር እና ቦቱን በአንድ ላይ ማስጀመር
 bot.launch();
-console.log("Bingo Bingo bot started successfully...");
-
-const express = require('express');
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.get('/', (req, res) => {
-  res.send('Bingo Bingo Bot is running!');
-});
-
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`Bingo Bingo server and bot running on port ${PORT}`);
 });
 
 process.once('SIGINT', () => bot.stop('SIGINT'));
