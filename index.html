@@ -561,27 +561,7 @@
             clearInterval(gameLoop);
             navTo('stake');
         }
-             // የቴሌግራም ዌብ አፕ ዳታን በመቀበል ተጠቃሚውን መለየት
-        let telegramUser = null; 
-
-        function initTelegramUser() {
-            if (window.Telegram && window.Telegram.WebApp) {
-                const tg = window.Telegram.WebApp;
-                tg.ready();
-                
-                // የተጠቃሚውን መረጃ ከቴሌግራም ማግኘት
-                if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                    telegramUser = tg.initDataUnsafe.user;
-                    console.log("Logged in Telegram User:", telegramUser);
-                    
-                    // ለምሳሌ የዩዘር ስም ማሳየት ከተፈለገ
-                    // document.getElementById('username-display').innerText = telegramUser.first_name;
-                }
-            }
-        } 
-
-        // ገጹ ሲከፈት የቴሌግራም መረጃን ማጣራት
-        // የተጠቃሚ መረጃ ከቴሌግራም እና ከሱፓቤዝ ማምጣት
+// የተጠቃሚ መረጃ ከቴሌግራም እና ከሱፓቤዝ ማምጣት
 let currentUserBalance = 0;
 let currentTelegramId = null;
 
