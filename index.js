@@ -15,27 +15,18 @@ bot.start(async (ctx) => {
     const userId = ctx.from.id;
     const firstName = ctx.from.first_name; 
 
-    try {
-        // ተጠቃሚውን ዳታቤዝ ውስጥ መፈለግ ወይም አዲስ መፍጠር
-        const { data, error } = await supabase
-            .from('users')
-            .upsert([{ telegram_id: userId, balance: 0 }], { onConflict: 'telegram_id' }); 
+bot.start((ctx) => {
+  const firstName = ctx.from.first_name;
+  
+  ctx.reply(`👋 ሰላም ${firstName}! ወደ Bingo bingo እንኳን በደህና መጡ! ጨዋታውን ለመጀመር ከታች ያለውን ቁልፍ ይጫኑ።`, {
+    reply_markup: {
+      inline_keyboard: [
+        [ { text: '🎮 ጨዋታን መጀመር', web_app: { url: 'https://binbingo-8epo.onrender.com' } } ]
+      ]
+    }
+  });
+});
 
-        if (error) throw error; 
-
-        // ለተጠቃሚው የእንኳን ደህና መጣህ መልዕክት እና አፑን መክፈቻ ቁልፍ መላክ
-        ctx.reply(`ሰላም ${firstName}! ወደ Bingo bingo በደህና መጡ! ጨዋታውን ለመጀመር ከታች ያለውን ቁልፍ ይጫኑ።`, {
-            reply_markup: {
-                inline_keyboard: [
-                    { text: '🎮 ጨዋታን መጀመር', web_app: { url: 'https://binbingo-8epo.onrender.com' } }
-
-                ]
-            }
-        });
-    } catch (err) {
-        console.error("Database Error:", err.message);
-        ctx.reply("ይቅርታ፣ ሲስተሙ ላይ ችግር አጋጥሟል። እባክዎ ትንሽ ቆይተው ይሞክሩ።");
-    }
 }); 
 
 // ቦቱን ማሰራት
