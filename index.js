@@ -44,3 +44,14 @@ console.log("Bingo bingo bot started successfully...");
 // (ይህ ኮድ ቦቱ እንዳይዘጋ ይረዳል)
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
+const express = require('express');
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.get('/', (req, res) => {
+  res.send('Bingo Bingo Bot is running!');
+});
+
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
