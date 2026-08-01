@@ -2,23 +2,14 @@
   "name": "workspace",
   "version": "0.0.0",
   "license": "MIT",
-"scripts": {
-  "start": "node index.js"
-},
-
+  "scripts": {
+    "start": "node index.js"
+  },
   "private": true,
   "dependencies": {
-    "@replit/connectors-sdk": "^0.4.1",
+    "express": "^4.19.2",
     "telegraf": "^4.16.3",
     "@supabase/supabase-js": "^2.39.8"
-  },
-  "devDependencies": {
-    "prettier": "^3.9.6",
-    "typescript": "^5.9.3"
   }
 }
-"dependencies": {
-  "express": "^4.19.2",
-  "telegraf": "^4.16.3",
-  "@supabase/supabase-js": "^2.39.8"
-}
+
