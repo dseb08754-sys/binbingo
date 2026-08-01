@@ -2,9 +2,9 @@ const { Telegraf, Markup } = require('telegraf');
 const { createClient } = require('@supabase/supabase-js');
 
 // 1. ማስፈንጠሪያ እና ኪዮች ከዲታቤዝ ጋር
-const BOT_TOKEN = '8913189775:AAewStmQ6Fv9uvPxMk3NrGyUuVoIyIbSNDs';
-const SUPABASE_URL = 'https://lwqqzkjxcsxkebkultyl.supabase.co/rest/v1/';
-const SUPABASE_KEY = 'sb_secret_TUbE22umxW0znJbrdEbcw_3ldulZ4g';
+const BOT_TOKEN = '8913189775:AAEwStmQ6Fv9uvPxMx3NrGYUuVoIybSNhDs';
+const SUPABASE_URL = 'https://lwqqzkjxcswxebkultyl.supabase.co/rest/v1/';
+const SUPABASE_KEY = 'sb_secret_TUbe2ZuwxM0zmJbrdEbcbw_3ldulZ4g';
 
 // 2. ቦት እና ዴታቤዝ ማዋቀር
 const bot = new Telegraf(BOT_TOKEN);
