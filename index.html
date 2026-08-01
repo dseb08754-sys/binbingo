@@ -581,26 +581,53 @@
         } 
 
         // ገጹ ሲከፈት የቴሌግራም መረጃን ማጣራት
-        window.onload = function() {
-            initTelegramUser();
-            buildSelectionGrid();
-            updateBalanceDisplay();
-        }; 
+        // የተጠቃሚ መረጃ ከቴሌግራም እና ከሱፓቤዝ ማምጣት
+let currentUserBalance = 0;
+let currentTelegramId = null;
 
-        // አድሚኑ ተጠቃሚው ብር ሲያስገባ በዩዘር መለያ (Telegram ID) ገንዘብ የሚጨምርበት פונክሽን
-        function adminAddBalanceToUser(targetUserId, amount, phoneNumber) {
-            // በdatabase ውስጥ ተጠቃሚውን ፍለጋ ብሩን መጨመር
-            console.log(`User ID: ${targetUserId} - Phone: ${phoneNumber} - Added: ${amount} ETB`);
-            
-            // ለተጠቃሚው በቦቱ በኩል ማሳወቂያ መላክ
-            // sendTelegramNotification(targetUserId, `የክፍያ ጥያቄዎ ጸድቆ ${amount} ብር አካውንትዎ ገብቷል!`);
-        } 
+async function initTelegramUser() {
+    if (window.Telegram && window.Telegram.WebApp) {
+        const tg = window.Telegram.WebApp;
+        tg.ready();
 
-        // አድሚኑ ወጪ ሲያደርግ ከቀሪ ሂሳብ ላይ የሚቀንሰው
-        function adminDeductBalanceForWithdraw(targetUserId, amount) {
-            console.log(`User ID: ${targetUserId} - Withdrawn: ${amount} ETB`);
-            // ከዳታቤዝ ላይ ተቀናሽ ማድረግ
-        }
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            const telegramUser = tg.initDataUnsafe.user;
+            currentTelegramId = telegramUser.id;
+            console.log("Logged in Telegram User:", currentTelegramId);
+
+            // ከሱፓቤዝ የዚህን ተጠቃሚ መረጃ መፈለግ
+            try {
+                let { data, error } = await supabaseClient
+                    .from('users')
+                    .select('*')
+                    .eq('telegram_id', currentTelegramId)
+                    .single();
+
+                if (data) {
+                    currentUserBalance = data.balance;
+                } else {
+                    // አዲስ ተጠቃሚ ከሆነ 10 ብር ቦነስ ጨምሮ መመዝገብ
+                    await supabaseClient.from('users').upsert({ 
+                        telegram_id: currentTelegramId, 
+                        balance: 10 
+                    });
+                    currentUserBalance = 10;
+                }
+                updateBalanceDisplay();
+            } catch (e) {
+                console.log("Supabase connection error:", e);
+            }
+        }
+    }
+}
+
+// ዌብ አፑ ሲከፈት የሚከናወኑ
+window.onload = async function() {
+    await initTelegramUser();
+    buildSelectionGrid();
+    updateBalanceDisplay();
+};
+
     </script>
 </body>
 </html>
