@@ -71,7 +71,7 @@ bot.start(async (ctx) => {
   } catch (err) {}
 
   ctx.reply(
-    `✨✨ እንደንዳ ደኑ ስንመ ${firstName}! ✨✨\n\n` +
+    `✨✨ እንኳን ወደ ቢንጎ ቢንጎ ቦት በደህና መጡ ${firstName}! ✨✨\n\n` +
     `🎉 ወደ Bingo Bingo ፕሮፌሽናል ሎቢ በደህና መጡ! 🎉\n\n` +
     `✅ ምዝገባዎ ተሳክቷል! የመጀመሪያ ስጦታ 10 ብር ተሠጥቷል።`,
     mainKeyboard
