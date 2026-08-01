@@ -1,88 +1,91 @@
 const { Telegraf, Markup } = require('telegraf');
 const { createClient } = require('@supabase/supabase-js');
 
-// 1. ማስፈንጠሪያ እና ኪዮች ከዲታቤዝ ጋር
+// 1. ትክክለኛ መረጃዎች እና ኪዮች
 const BOT_TOKEN = '8913189775:AAEwStmQ6Fv9uvPxMx3NrGYUuVoIybSNhDs';
 const SUPABASE_URL = 'https://lwqqzkjxcswxebkultyl.supabase.co/rest/v1/';
 const SUPABASE_KEY = 'sb_secret_TUbe2ZuwxM0zmJbrdEbcbw_3ldulZ4g';
+const REQUIRED_CHANNEL = '@Bingobingoethiobot'; // ተጠቃሚዎች እንዲቀላቀሉ የሚጠበቅበት ቻናል
 
-// 2. ቦት እና ዴታቤዝ ማዋቀር
 const bot = new Telegraf(BOT_TOKEN);
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const WEB_APP_URL = 'https://binbingo-8epo.onrender.com';
 
-// 3. ዋና ዋና የኪቦርድ አዝራሮች (Reply Keyboards)
+// 2. ፕሮፌሽናል ዋና ዋና የኪቦርድ አዝራሮች (እንደ ምስሉ)
 const mainKeyboard = Markup.keyboard([
-  ['🎮 Play Game'],
+  ['🎮 Play'],
   ['💰 Deposit', '🦋 Withdraw'],
   ['💳 Balance'],
   ['📞 Support', '📖 Instructions'],
-  ['🎁 Invite Friends']
+  ['🎁 Invite']
 ]).resize();
 
-// 4. /start ትዕዛዝ (ስልክ ቁጥር መጠየቂያ ፎርማት)
+// 3. ቻናል የመቀላቀል ሁኔታን ማረጋገጫ ፋንክሽን
+async function checkSubscription(userId) {
+  try {
+    const chatMember = await bot.telegram.getChatMember(REQUIRED_CHANNEL, userId);
+    return ['creator', 'administrator', 'member'].includes(chatMember.status);
+  } catch (e) {
+    return true; // ቻናሉ ክፍት ከሆነ ወይም ኤሮር ካመጣ እንዳይዘጋ
+  }
+}
+
+// 4. /start ትዕዛዝ (ቻናል ማረጋገጫ እና ምዝገባ)
 bot.start(async (ctx) => {
   const userId = ctx.from.id;
   const firstName = ctx.from.first_name;
 
-  try {
-    const { data, error } = await supabase
-      .from('users')
-      .select('phone_number')
-      .eq('telegram_id', userId)
-      .single();
-
-    if (error || !data || !data.phone_number) {
-      // ስልክ ቁጥር ካልተመዘገበ ቁጥር መጠየቂያ বাቶ ማሳየት
-      return ctx.reply('ምዝገባውን ለማጠናቀቅ እባክዎ ከዚህ താഴെയുള്ള የመመዝገቢያ ቅጽ ይጫኑ።', {
+  const isJoined = await checkSubscription(userId);
+  if (!isJoined) {
+    return ctx.reply(
+      `👋 ሰላም ${firstName}!\n\nቦቱን ለመጠቀም መጀመሪያ ከታች ያለውን ሊንክ በመጫን ቻናላችንን መቀላቀል አለብዎት።`,
+      {
         reply_markup: {
-          keyboard: [
-            [{ text: '📱 ስልክ ቁጥር አጋራ (Share Contact)', request_contact: true }]
-          ],
-          resize_keyboard: true,
-          one_time_keyboard: true
+          inline_keyboard: [
+            [{ text: '📢 ቻናሉን ይቀላቀሉ (Join Channel)', url: 'https://t.me/Bingobingoethiobot' }],
+            [{ text: '✅ ተቀላቅለዋል (Check)', callback_data: 'check_join' }]
+          ]
         }
-      });
-    }
-
-    // አስቀድሞ ከተመዘገበ
-    ctx.reply(`👋 ሰላም ${firstName}! ወደ Bingo Bingo እንኳን በደህና መጡ።`, mainKeyboard);
-  } catch (err) {
-    ctx.reply('👋 ሰላም! ወደ Bingo Bingo እንኳን በደህና መጡ።', mainKeyboard);
-  }
-});
-
-// 5. ስልክ ቁጥር ሲልክ መቀበል እና ማስቀመጥ
-bot.on('contact', async (ctx) => {
-  const userId = ctx.from.id;
-  const phoneNumber = ctx.message.contact.phone_number;
-
-  try {
-    await supabase
-      .from('users')
-      .upsert({ telegram_id: userId, phone_number: phoneNumber, balance: 10 }, { onConflict: 'telegram_id' });
-
-    await ctx.reply('✅ በተሳካ ሁኔታ ተመዝግበዋል!\nብር: 10', mainKeyboard);
-    ctx.reply('ለቀጣይ ማሞቂያውን ይጠቀሙ:-', {
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: '🎮 Play Game', web_app: { url: WEB_APP_URL } }]
-        ]
       }
-    });
-  } catch (err) {
-    console.error(err);
-    ctx.reply('ይቅርታ፣ በምዝገባ ወቅት ችግር አጋጥሟል።');
+    );
   }
+
+  // ዴታቤዝ ቼክ እና ምዝገባ
+  try {
+    const { data } = await supabase.from('users').select('*').eq('telegram_id', userId).single();
+    if (!data) {
+      await supabase.from('users').upsert({ telegram_id: userId, balance: 10 }, { onConflict: 'telegram_id' });
+    }
+  } catch (err) {}
+
+  ctx.reply(
+    `✨✨ እንደንዳ ደኑ ስንመ ${firstName}! ✨✨\n\n` +
+    `🎉 ወደ Bingo Bingo ፕሮፌሽናል ሎቢ በደህና መጡ! 🎉\n\n` +
+    `✅ ምዝገባዎ ተሳክቷል! የመጀመሪያ ስጦታ 10 ብር ተሠጥቷል።`,
+    mainKeyboard
+  );
 });
 
-// 6. የተጠቃሚ ቁልፎች ተግባር
-bot.hears('🎮 Play Game', (ctx) => {
-  ctx.reply('🎮 ጨዋታውን ለመጀመር ከታች ያለውን ሊንክ ይጫኑ፡', {
+// ቻናሉን መቀላቀሉን ሲጫን የሚመለስ
+bot.action('check_join', async (ctx) => {
+  const userId = ctx.from.id;
+  const isJoined = await checkSubscription(userId);
+
+  if (!isJoined) {
+    return ctx.answerCbQuery('⚠️ እባክዎ መጀመሪያ ቻናሉን ይቀላቀሉ!', { show_alert: true });
+  }
+
+  await ctx.deleteMessage();
+  ctx.reply('✅ እናመሰግናለን! አሁን ጨዋታውን መጀመር ይችላሉ።', mainKeyboard);
+});
+
+// 5. ሜኑ ትዕዛዞች
+bot.hears('🎮 Play', (ctx) => {
+  ctx.reply('🎮 ጨዋታውን ለመጀመር ከታች ያለውን ቁልፍ ይጫኑ፡', {
     reply_markup: {
       inline_keyboard: [
-        [{ text: '🎮 ጨዋታ ክፈት', web_app: { url: WEB_APP_URL } }]
+        [{ text: '🚀 ጨዋታ ክፈት (Open Game)', web_app: { url: WEB_APP_URL } }]
       ]
     }
   });
@@ -92,36 +95,41 @@ bot.hears('💳 Balance', async (ctx) => {
   const userId = ctx.from.id;
   try {
     const { data } = await supabase.from('users').select('balance').eq('telegram_id', userId).single();
-    const balance = data ? data.balance : 0;
-    ctx.reply(`💳 የእርስዎ አካውንት ቀሪ ሂሳብ:\nብር ${balance}`);
+    const balance = data ? data.balance : 10;
+    ctx.reply(`💳 የእርስዎ ቀሪ ሂሳብ:\nብር ${balance}`);
   } catch (e) {
-    ctx.reply('💳 የእርስዎ አካውንት ቀሪ ሂሳብ:\nብር 0');
+    ctx.reply(`💳 የእርስዎ ቀሪ ሂሳብ:\nብር 10`);
   }
 });
 
 bot.hears('💰 Deposit', (ctx) => {
-  ctx.reply('💰 የሂሳብ ገቢ (Deposit) ለማድረግ በሰርቨሩ ላይ ያሉትን አማራጮች ይጠቀሙ።');
+  ctx.reply(
+    `💰 **ገንዘብ ገቢ (Deposit) ለማድረግ፦**\n\n` +
+    `እባክዎ በቴሌብር ቁጥር፦ **+251967820050** ገንዘብ ያስተላልፉ።\n\n` +
+    `ትራንስፌር ካደረጉ በኋላ ስክሪንሹት ወይም SMS በመያዝ ለአድሚን **@Bingbingchat** ይላኩ።`,
+    { parse_mode: 'Markdown' }
+  );
 });
 
 bot.hears('🦋 Withdraw', (ctx) => {
-  ctx.reply('🦋 ገንዘብ ለማውጣት (Withdraw) የባንክ ወይም የቴሌብር መረጃዎን ያስገቡ።');
-});
-
-bot.hears('📞 Support', (ctx) => {
-  ctx.reply('📞 ማንኛውም ጥያቄ ካሎት በቤተሰብ ድጋፍ ሰጪ አግኙን @Support');
+  ctx.reply('🦋 ገንዘብ ለማውጣት የሚፈልጉትን መጠን እና የባንክ/ቴሌብር መረጃዎን ለአድሚን @Bingbingchat ይላኩ።');
 });
 
 bot.hears('📖 Instructions', (ctx) => {
-  ctx.reply('📖 የቢንጎ ጨዋታ አጨዋወት መመሪያዎች እዚህ ይገኛሉ...');
+  ctx.reply('📖 **የቢንጎ ጨዋታ መመሪያዎች:**\n1. ካርቴላ ይምረጡ።\n2. ቁጥሮች ሲጠሩ ይከታተሉ።\n3. ሲጨርሱ ቢንጎ ይበሉ!');
 });
 
-bot.hears('🎁 Invite Friends', (ctx) => {
+bot.hears('📞 Support', (ctx) => {
+  ctx.reply('🛠️ ማንኛውም ጥያቄ ወይም እርዳታ ካሎት እዚህ ያግኙን: @Bingbingchat');
+});
+
+bot.hears('🎁 Invite', (ctx) => {
   const botUsername = ctx.botInfo.username;
   const inviteLink = `https://t.me/${botUsername}?start=${ctx.from.id}`;
   ctx.reply(`🎁 ጓደኛዎችዎን በመጋበዝ ሽልማት ያግኙ!\n\nየእርስዎ መጋበዣ ሊንክ:\n${inviteLink}`);
 });
 
-// 7. ሰርቨር ማስጀመር
+// 6. ሰርቨር ማስጀመር
 bot.launch();
 console.log("Bingo Bingo bot started successfully...");
 
@@ -139,4 +147,3 @@ app.listen(PORT, () => {
 
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
-
