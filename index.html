@@ -186,14 +186,37 @@
             <div class="page-card"><p style="font-size:12px; color:#555;">ያለፉ ጨዋታዎች ታሪክ በዚህ ይመለከታሉ።</p></div>
         </div>
 
-        <!-- WALLET PAGE -->
-        <div id="page-wallet" class="page">
-            <h3 style="color:var(--dark-purple);">Wallet</h3>
-            <div class="page-card">
-                <p style="font-size:12px; color:#555; margin-bottom: 8px;">መለያ ቀሪ ሂሳብ: <b id="wallet-bal" style="color:var(--dark-purple);">200.00</b> ETB</p>
-                <button onclick="addBalance(100)" style="background:var(--btn-green); color:white; border:none; padding:8px 15px; border-radius:5px; font-weight:bold; font-size:11px; cursor:pointer;">+ 100 ብር ጨምር</button>
-            </div>
-        </div>
+<!-- WALLET PAGE -->
+<div id="page-wallet" class="page">
+    <h3 style="color: var(--dark-purple); margin-bottom: 15px;">Wallet & Transactions</h3>
+    
+    <!-- Balance Card -->
+    <div class="page-card" style="margin-bottom: 15px; text-align: center;">
+        <p style="font-size: 14px; color: #555; margin-bottom: 5px;">ቀሪ ሂሳብዎ (Balance)</p>
+        <h2 id="wallet-bal" style="color: var(--btn-green); font-size: 24px;">0.00</h2>
+        <p style="font-size: 12px; color: #888;">ETB</p>
+    </div>
+
+    <!-- Deposit Request Card -->
+    <div class="page-card" style="margin-bottom: 15px;">
+        <h4 style="color: var(--dark-purple); margin-bottom: 8px;">💰 ገንዘብ ለመጫን (Deposit)</h4>
+        <p style="font-size: 11px; color: #666; margin-bottom: 10px;">
+            በንግድ ባንክ (1000... CBE) ወይም በቴሌብር (09...) ብር ከላኩ በኋላ የትራንዛክሽን መጠኑን અહીં ያስገቡ።
+        </p>
+        <input type="number" id="deposit-amount" placeholder="የላኩትን ብር መጠን (ETB)" style="width: 100%; padding: 8px; margin-bottom: 8px; border: 1px solid #ddd; border-radius: 6px;">
+        <button onclick="requestDeposit()" style="width: 100%; background: var(--btn-green); color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold;">የገቢ ጥያቄ ላክ</button>
+    </div>
+
+    <!-- Withdraw Request Card -->
+    <div class="page-card">
+        <h4 style="color: var(--dark-purple); margin-bottom: 8px;">ንስ (Withdrawal)</h4>
+        <p style="font-size: 11px; color: #666; margin-bottom: 10px;">ያሸነፉትን ገንዘብ ወደ እርስዎ የባንክ/ቴሌብር አካውንት ማውጣት ይችላሉ።</p>
+        <input type="number" id="withdraw-amount" placeholder="የሚያወጡትን ብር መጠን" style="width: 100%; padding: 8px; margin-bottom: 8px; border: 1px solid #ddd; border-radius: 6px;">
+        <input type="text" id="withdraw-phone" placeholder="የባንክ/ቴሌብር አካውንት ቁጥር እና ስም" style="width: 100%; padding: 8px; margin-bottom: 8px; border: 1px solid #ddd; border-radius: 6px;">
+        <button onclick="requestWithdrawal()" style="width: 100%; background: var(--btn-orange); color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold;">የወጪ ጥያቄ ላክ</button>
+    </div>
+</div>
+
 
         <!-- PROFILE PAGE -->
         <div id="page-profile" class="page">
@@ -634,6 +657,74 @@ window.onload = async function() {
         buildSelectionGrid();
     }
 };
+// የገቢ ጥያቄ ማስተላለፊያ
+async function requestDeposit() {
+    const amountInput = document.getElementById('deposit-amount');
+    const amount = parseFloat(amountInput.value);
+
+    if (!amount || amount <= 0) {
+        alert("እባክዎ ትክክለኛ የብር መጠን ያስገቡ!");
+        return;
+    }
+
+    try {
+        const { error } = await db.from('deposits').insert([
+            {
+                telegram_id: currentTelegramId,
+                username: userName,
+                amount: amount,
+                status: 'pending'
+            }
+        ]);
+
+        if (error) throw error;
+
+        alert("የገቢ ጥያቄዎ በተሳካ ሁኔታ ተላከ! አድሚኑ ሲያረጋግጠው ባላንስዎ ይስተካከላል።");
+        amountInput.value = '';
+    } catch (err) {
+        console.error("Deposit error:", err);
+        alert("ጥያቄውን መላክ አልተቻለም። እባክዎ እንደገና ይሞክሩ።");
+    }
+}
+
+// የወጪ ጥያቄ ማስተላለፊያ
+async function requestWithdrawal() {
+    const amountInput = document.getElementById('withdraw-amount');
+    const phoneInput = document.getElementById('withdraw-phone');
+    const amount = parseFloat(amountInput.value);
+    const phone = phoneInput.value.trim();
+
+    if (!amount || amount <= 0 || !phone) {
+        alert("እባክዎ ትክክለኛ የብር መጠን እና የአካውንት መረጃ ያስገቡ!");
+        return;
+    }
+
+    if (amount > userBalance) {
+        alert("ቀሪ ሂሳብዎ በቂ አይደለም!");
+        return;
+    }
+
+    try {
+        const { error } = await db.from('withdrawals').insert([
+            {
+                telegram_id: currentTelegramId,
+                username: userName,
+                amount: amount,
+                phone_number: phone,
+                status: 'pending'
+            }
+        ]);
+
+        if (error) throw error;
+
+        alert("የወጪ ጥያቄዎ ተልኳል! አድሚኑ ሲያረጋግጠው ብሩ ይለቀቅልዎታል።");
+        amountInput.value = '';
+        phoneInput.value = '';
+    } catch (err) {
+        console.error("Withdrawal error:", err);
+        alert("ጥያቄውን መላክ አልተቻለም።");
+    }
+}
 
     </script>
 </body>
