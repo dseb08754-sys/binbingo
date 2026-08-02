@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Bingo Bingo Pro - V3</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
@@ -561,35 +562,30 @@
             clearInterval(gameLoop);
             navTo('stake');
         }
-// Supabase ትክክለኛ ግንኙነት እና የውሂብ ማስተካከያ
+// Supabase ግንኙነት
 const SUPABASE_URL = 'https://lwqqzkjxcswxebkultyl.supabase.co/rest/v1/';
 const SUPABASE_KEY = 'sb_secret_TUbe2ZuwxM0zmJbrdEbcbw_3ldulZ4g';
-
-// Supabase 클라이언트 (Client) መፍጠር
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let currentUserBalance = 0;
-let currentTelegramId = null;
+let currentTelegramId = 123456789; // ለሙከራ (Default)
+let userName = "ተጠቃሚ";
 
 async function initTelegramUser() {
     try {
+        // የቴሌግራም መረጃ መውሰድ
         if (window.Telegram && window.Telegram.WebApp) {
             const tg = window.Telegram.WebApp;
             tg.ready();
-
             if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
                 currentTelegramId = tg.initDataUnsafe.user.id;
+                userName = tg.initDataUnsafe.user.first_name;
             }
         }
 
-        // ለፈተና ያህል ቴሌግራም ባይኖርም በዲፎልት ቴሌግራም ID እንዲሰራ (Testing fallback)
-        if (!currentTelegramId) {
-            currentTelegramId = 123456789; 
-        }
+        console.log("Checking Supabase for ID:", currentTelegramId);
 
-        console.log("Checking user in Supabase, ID:", currentTelegramId);
-
-        // ከሱፓቤዝ ዳታቤዝ መረጃውን መፈለግ
+        // ዳታቤዝ ላይ መፈለግ
         let { data, error } = await db
             .from('users')
             .select('*')
@@ -597,35 +593,41 @@ async function initTelegramUser() {
             .maybeSingle();
 
         if (data) {
-            currentUserBalance = data.balance || 0;
+            currentUserBalance = data.balance;
         } else {
-            // ተጠቃሚው ከሌለ በአዲስ መልክ መመዝገብ እና 10 ብር ቦነስ መስጠት
-            const { error: insertError } = await db
-                .from('users')
-                .insert([{ telegram_id: currentTelegramId, balance: 10 }]);
-            
-            if (!insertError) {
-                currentUserBalance = 10;
-            }
+            // አዲስ ተጠቃሚ ከሆነ በ10 ብር ይመዘገባል
+            await db.from('users').insert([{ telegram_id: currentTelegramId, balance: 10 }]);
+            currentUserBalance = 10;
         }
 
-        // በገጹ ላይ ያሉትን የባላንስ መጠኖች ማሻሻል
-        updateBalanceDisplay();
-        
+        // መረጃዎቹን በስክሪኑ ላይ ማሳየት
+        updateDisplays();
+
     } catch (err) {
         console.error("Database connection error:", err);
     }
 }
 
-// የባላንስ ማሳያዎችን በሰነዱ ላይ የሚያዘምነው ፋንክሽን
-function updateBalanceDisplay() {
-    const balanceElements = document.querySelectorAll('#user-balance, #wallet-balance, .balance-display');
-    balanceElements.forEach(el => {
-        if (el) el.innerText = `${currentUserBalance} ETB`;
-    });
+function updateDisplays() {
+    // 1. የገንዘብ መጠን ማስተካከያ (Header & Wallet)
+    const headerBalance = document.getElementById('user-balance');
+    const walletBalance = document.getElementById('wallet-balance');
+    
+    if (headerBalance) headerBalance.innerText = `${currentUserBalance} ETB`;
+    if (walletBalance) walletBalance.innerText = `${currentUserBalance}`;
+
+    // 2. የፕሮፋይል ገጽ ማስተካከያ
+    const profileInfo = document.getElementById('user-profile-info');
+    if (profileInfo) {
+        profileInfo.innerHTML = `
+            <strong>ስም:</strong> ${userName} <br><br>
+            <strong>የቴሌግራም ID:</strong> ${currentTelegramId} <br><br>
+            <strong>ቀሪ ሂሳብ:</strong> ${currentUserBalance} ETB
+        `;
+    }
 }
 
-// ዌብ አፑ ሲከፈት የሚጀምረው
+// ዌብ አፑ ሲከፈት የሚሰሩ ትዕዛዞች
 window.onload = async function() {
     await initTelegramUser();
     if (typeof buildSelectionGrid === 'function') buildSelectionGrid();
