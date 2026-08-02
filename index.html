@@ -198,7 +198,8 @@
         <!-- PROFILE PAGE -->
         <div id="page-profile" class="page">
             <h3 style="color:var(--dark-purple);">Profile</h3>
-            <div class="page-card"><p style="font-size:12px; color:#555;">የተጠቃሚ መረጃዎች እዚህ ይኖራሉ።</p></div>
+            <div class="page-card"><p id="user-profile-info" style="font-size:14px; color:#555; line-height:1.6; padding:10px;">የተጠቃሚ መረጃዎች እዚህ ይኖራሉ።</p>
+
         </div>
     </div>
 
@@ -223,7 +224,7 @@
     </div>
 
     <script>
-        let userBalance = 200.00;
+        let userBalance = 0;
         let selectedStake = 10;
         let chosenBoards = [];
         
@@ -240,12 +241,7 @@
             updateBalanceDisplay();
         };
 
-        function updateBalanceDisplay() {
-            document.getElementById('app-bal').innerText = userBalance.toFixed(2);
-            let wBal = document.getElementById('wallet-bal');
-            if(wBal) wBal.innerText = userBalance.toFixed(2);
-        }
-
+   
         function addBalance(amount) {
             userBalance += amount;
             updateBalanceDisplay();
@@ -567,13 +563,12 @@ const SUPABASE_URL = 'https://lwqqzkjxcswxebkultyl.supabase.co/rest/v1/';
 const SUPABASE_KEY = 'sb_secret_TUbe2ZuwxM0zmJbrdEbcbw_3ldulZ4g';
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let currentUserBalance = 0;
-let currentTelegramId = 123456789; // ለሙከራ (Default)
+let currentTelegramId = 123456789; // ለሙከራ (Default Test ID)
 let userName = "ተጠቃሚ";
 
 async function initTelegramUser() {
     try {
-        // የቴሌግራም መረጃ መውሰድ
+        // 1. የቴሌግራም መረጃ መውሰድ
         if (window.Telegram && window.Telegram.WebApp) {
             const tg = window.Telegram.WebApp;
             tg.ready();
@@ -585,7 +580,7 @@ async function initTelegramUser() {
 
         console.log("Checking Supabase for ID:", currentTelegramId);
 
-        // ዳታቤዝ ላይ መፈለግ
+        // 2. ከዳታቤዝ ጋር መገናኘት
         let { data, error } = await db
             .from('users')
             .select('*')
@@ -593,44 +588,51 @@ async function initTelegramUser() {
             .maybeSingle();
 
         if (data) {
-            currentUserBalance = data.balance;
+            userBalance = data.balance; // ወደ ዋናው የጨዋታ ሂሳብ ማስገባት
         } else {
-            // አዲስ ተጠቃሚ ከሆነ በ10 ብር ይመዘገባል
+            // አዲስ ተጫዋች ከሆነ የ 10 ብር ስጦታ ይመዘገባል
             await db.from('users').insert([{ telegram_id: currentTelegramId, balance: 10 }]);
-            currentUserBalance = 10;
+            userBalance = 10;
         }
 
-        // መረጃዎቹን በስክሪኑ ላይ ማሳየት
-        updateDisplays();
+        // መረጃዎቹን ስክሪን ላይ ማሳየት
+        updateBalanceDisplay();
 
     } catch (err) {
         console.error("Database connection error:", err);
+        updateBalanceDisplay(); // ኢንተርኔት ቢቋረጥም ዜሮ ብር እንዲያሳይ
     }
 }
 
-function updateDisplays() {
-    // 1. የገንዘብ መጠን ማስተካከያ (Header & Wallet)
-    const headerBalance = document.getElementById('user-balance');
-    const walletBalance = document.getElementById('wallet-balance');
+// የድሮውን አጥፍተን በዚህ አዲስ እና ሁሉን-አቀፍ ማሳያ እንተካዋለን
+function updateBalanceDisplay() {
+    // 1. የዋናው ገጽ እና የዋሌት (Wallet) ሂሳብ ማስተካከያ 
+    const headerBalance = document.getElementById('app-bal');
+    const walletBalance = document.getElementById('wallet-bal');
     
-    if (headerBalance) headerBalance.innerText = `${currentUserBalance} ETB`;
-    if (walletBalance) walletBalance.innerText = `${currentUserBalance}`;
+    if (headerBalance) headerBalance.innerText = userBalance.toFixed(2);
+    if (walletBalance) walletBalance.innerText = userBalance.toFixed(2);
 
-    // 2. የፕሮፋይል ገጽ ማስተካከያ
+    // 2. የፕሮፋይል (Profile) መረጃ ማስተካከያ
     const profileInfo = document.getElementById('user-profile-info');
     if (profileInfo) {
         profileInfo.innerHTML = `
-            <strong>ስም:</strong> ${userName} <br><br>
-            <strong>የቴሌግራም ID:</strong> ${currentTelegramId} <br><br>
-            <strong>ቀሪ ሂሳብ:</strong> ${currentUserBalance} ETB
+            <div style="text-align: left;">
+                <strong>👤 ስም:</strong> ${userName} <br><br>
+                <strong>🆔 አይዲ (ID):</strong> ${currentTelegramId} <br><br>
+                <strong>💰 ቀሪ ሂሳብ:</strong> ${userBalance.toFixed(2)} ETB
+            </div>
         `;
     }
 }
 
-// ዌብ አፑ ሲከፈት የሚሰሩ ትዕዛዞች
+// ዌብ አፑ ሲከፈት እንዲሰራ ማዘዝ
 window.onload = async function() {
     await initTelegramUser();
-    if (typeof buildSelectionGrid === 'function') buildSelectionGrid();
+    
+    if (typeof buildSelectionGrid === 'function') {
+        buildSelectionGrid();
+    }
 };
 
     </script>
