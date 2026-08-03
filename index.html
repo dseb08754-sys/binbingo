@@ -695,7 +695,7 @@ async function requestWithdrawal() {
     const phone = phoneInput.value.trim();
 
     if (!amount || amount <= 0 || !phone) {
-        alert("እባክዎ ትክክለኛ የብር መጠን እና የአካውንት መረጃ ያስገቡ!");
+        alert("Deposit Error: " + err.message);
         return;
     }
 
@@ -722,7 +722,7 @@ async function requestWithdrawal() {
         phoneInput.value = '';
     } catch (err) {
         console.error("Withdrawal error:", err);
-        alert("ጥያቄውን መላክ አልተቻለም።");
+alert("Withdraw Error: " + err.message);
     }
 }
 
